@@ -6,6 +6,11 @@ if __name__ == "__main__":
     root.title("Gestão de Consultório")
     root.geometry("800x600")
 
+    try:
+        root.iconbitmap("./icon.ico")
+    except:
+        ...
+
     app = AppController(root)
     app.pack(fill="both", expand=True)
 
