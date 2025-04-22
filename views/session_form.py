@@ -12,8 +12,8 @@ class SessionFormView(tk.Frame):
     def __init__(self, master, show_view_callback):
         super().__init__(master)
         self.show_view = show_view_callback
-        self.selected_session_id = (
-            None  # To store the ID of the selected session
+        self.selected_appointment_id = (
+            None  # To store the ID of the selected appointment
         )
 
         tk.Label(self, text="Session Form", font=("Arial", 16)).pack(
@@ -150,18 +150,18 @@ class SessionFormView(tk.Frame):
                 .first()
             )
             if patient:
-                if self.selected_session_id:
+                if self.selected_appointment_id:
                     # Editing existing session
-                    session_to_update = (
+                    appointment_to_update = (
                         session.query(Appointment)
-                        .filter(Appointment.id == self.selected_session_id)
+                        .filter(Appointment.id == self.selected_appointment_id)
                         .first()
                     )
-                    if session_to_update:
-                        session_to_update.date = session_date
-                        session_to_update.patient_id = patient.id
-                        session_to_update.record_done = record_done
-                        session_to_update.record_launched = record_launched
+                    if appointment_to_update:
+                        appointment_to_update.date = session_date
+                        appointment_to_update.patient_id = patient.id
+                        appointment_to_update.record_done = record_done
+                        appointment_to_update.record_launched = record_launched
                         messagebox.showinfo(
                             "Sucesso", "Sessão atualizada com sucesso!"
                         )
@@ -169,13 +169,13 @@ class SessionFormView(tk.Frame):
                         messagebox.showerror("Erro", "Sessão não encontrada.")
                 else:
                     # Creating new session
-                    new_session = Appointment(
+                    new_appointment = Appointment(
                         date=session_date,
                         patient_id=patient.id,
                         record_done=record_done,
                         record_launched=record_launched,
                     )
-                    session.add(new_session)
+                    session.add(new_appointment)
                     messagebox.showinfo("Sucesso", "Sessão salva com sucesso!")
             else:
                 messagebox.showerror("Erro", "Paciente não encontrado.")
@@ -185,7 +185,7 @@ class SessionFormView(tk.Frame):
 
     def delete_session(self):
         """Delete the selected session from the database"""
-        if not self.selected_session_id:
+        if not self.selected_appointment_id:
             messagebox.showerror(
                 "Error", "Selecione um atendimento para excluir."
             )
@@ -196,13 +196,13 @@ class SessionFormView(tk.Frame):
             "Tem certeza de que deseja excluir este atendimento?",
         ):
             with session_scope() as session:
-                session_to_delete = (
+                appointment_to_delete = (
                     session.query(Appointment)
-                    .filter(Appointment.id == self.selected_session_id)
+                    .filter(Appointment.id == self.selected_appointment_id)
                     .first()
                 )
-                if session_to_delete:
-                    session.delete(session_to_delete)
+                if appointment_to_delete:
+                    session.delete(appointment_to_delete)
                     messagebox.showinfo(
                         "Success", "Atendimento excluído com sucesso!"
                     )
@@ -215,25 +215,25 @@ class SessionFormView(tk.Frame):
     def load_session_for_editing(self, session_id):
         """Load the selected session's data into the form for editing"""
         with session_scope() as session:
-            session_to_load = (
+            appointment_to_load = (
                 session.query(Appointment)
                 .filter(Appointment.id == session_id)
                 .first()
             )
 
-            if session_to_load:
-                self.selected_session_id = session_to_load.id
+            if appointment_to_load:
+                self.selected_appointment_id = appointment_to_load.id
                 self.patient_combo.set(
-                    session_to_load.patient.name
-                    if session_to_load.patient
+                    appointment_to_load.patient.name
+                    if appointment_to_load.patient
                     else ""
                 )
                 self.date_entry.delete(0, tk.END)
                 self.date_entry.insert(
-                    0, session_to_load.date.strftime("%d-%m-%Y")
+                    0, appointment_to_load.date.strftime("%d-%m-%Y")
                 )
-                self.record_done_var.set(session_to_load.record_done)
-                self.record_launched_var.set(session_to_load.record_launched)
+                self.record_done_var.set(appointment_to_load.record_done)
+                self.record_launched_var.set(appointment_to_load.record_launched)
                 self.delete_button.config(
                     state=tk.NORMAL
                 )  # Enable delete button
@@ -249,27 +249,40 @@ class SessionFormView(tk.Frame):
             widget.destroy()  # Clear existing sessions
 
         with session_scope() as session:
-            sessions = (
+            appointments = (
                 session.query(Appointment)
                 .order_by(Appointment.date.desc())
                 .limit(10)
                 .all()
             )  # Get latest 10 sessions
-            for session in sessions:
-                patient_name = session.patient.name if session.patient else "N/A"
-                session_info = f"{session.date.strftime('%d-%m-%Y')} - {patient_name} - Feito: {session.record_done} - Lançado: {session.record_launched}"
+            for appointment in appointments:
+                patient_name = (
+                    appointment.patient.name if appointment.patient else "N/A"
+                )
+                session_info = f"{appointment.date.strftime('%d-%m-%Y')} - {patient_name} - Feito: {appointment.record_done} - Lançado: {appointment.record_launched}"
 
                 # Cria a label e destaca se necessário
                 label = tk.Label(self.scrollable_frame, text=session_info)
-                if not session.record_done and not session.record_launched:
-                    label.config(bg="yellow")  # Destaca com fundo amarelo
 
-                # Bind the click event to the label, passing the session ID
+                if not appointment.record_done:
+                    label.config(
+                        bg="red"
+                    )  # Destaca com fundo vermelho se não foi feito
+                elif not appointment.record_launched:
+                    label.config(
+                        bg="orange"
+                    )  # Destaca com fundo laranja se foi feito mas não lançado
+                else:
+                    label.config(
+                        bg="green"
+                    )  # Destaca com fundo verde se ambos são True
+
+                # Bind the click event to the label, passing the appointment ID
                 label.bind(
                     "<Button-1>",
                     lambda e,
-                    session_id=session.id: self.load_session_for_editing(
-                        session_id
+                    appointment_id=appointment.id: self.load_session_for_editing(
+                        appointment_id
                     ),
                 )
 
@@ -277,7 +290,7 @@ class SessionFormView(tk.Frame):
 
     def clear_form(self):
         """Clear the form fields and reset to default state"""
-        self.selected_session_id = None
+        self.selected_appointment_id = None
         self.patient_combo.set("")
         self.date_entry.delete(0, tk.END)
         self.date_entry.insert(0, datetime.now().strftime("%d-%m-%Y"))
