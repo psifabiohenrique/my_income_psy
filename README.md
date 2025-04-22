@@ -67,6 +67,31 @@
    python main.py
    ```
 
+## 🛠️ Geração do Executável
+
+Para gerar um executável da aplicação, siga os passos abaixo:
+
+1. Certifique-se de que você tenha o **PyInstaller** instalado. Se não tiver, instale-o usando o seguinte comando:
+   ```bash
+   pip install pyinstaller
+   ```
+
+2. Navegue até o diretório do projeto onde o arquivo `main.py` está localizado.
+
+3. Execute o seguinte comando para gerar o executável:
+   ```bash
+   pyinstaller --onefile --icon=assets/icon.ico --noconsole main.py 
+   ```
+
+4. Após a execução do comando, o executável será gerado na pasta `dist/`. Você pode encontrar o arquivo chamado `my_income_psy.exe` dentro dessa pasta.
+
+5. Para executar a aplicação, basta abrir o terminal, navegar até a pasta `dist/` e executar:
+   ```bash
+   ./my_income_psy.exe
+   ```
+
+Agora você pode usar a aplicação como um executável independente!
+
 ## 📝 Como Utilizar
 
 ### Gerenciamento de Pacientes
