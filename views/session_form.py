@@ -20,9 +20,7 @@ class SessionFormView(tk.Frame):
             pady=10, anchor="center"
         )
         tk.Button(
-            self,
-            text="Back to List",
-            command=lambda: self.show_view("patient_list"),
+            self, text="Back to List", command=lambda: self.show_view("patient_list")
         ).pack(pady=20, anchor="center")
 
         # Form fields frame
@@ -30,16 +28,14 @@ class SessionFormView(tk.Frame):
         self.form_frame.pack(pady=10, padx=20, fill="x")
 
         # Patient selection
-        tk.Label(self.form_frame, text="Paciente:").grid(
-            row=0, column=0, sticky="w"
-        )
+        tk.Label(self.form_frame, text="Patient:").grid(row=0, column=0, sticky="w")
         self.patient_combo = ttk.Combobox(
             self.form_frame, values=self.get_patient_names()
         )
         self.patient_combo.grid(row=0, column=1, sticky="ew", pady=5)
 
         # Session date
-        tk.Label(self.form_frame, text="Data da Sessão:").grid(
+        tk.Label(self.form_frame, text="Session Date:").grid(
             row=1, column=0, sticky="w"
         )
         self.date_entry = DateEntry(
@@ -52,20 +48,16 @@ class SessionFormView(tk.Frame):
         )
         self.date_entry.grid(row=1, column=1, sticky="ew", pady=5)
 
-        # Prontuario feito checkbox
+        # Record done checkbox
         self.record_done_var = tk.BooleanVar()
         tk.Checkbutton(
-            self.form_frame,
-            text="Prontuário Feito",
-            variable=self.record_done_var,
+            self.form_frame, text="Record Done", variable=self.record_done_var
         ).grid(row=2, column=0, columnspan=2, pady=5)
 
-        # Prontuario lançado checkbox
+        # Record launched checkbox
         self.record_launched_var = tk.BooleanVar()
         tk.Checkbutton(
-            self.form_frame,
-            text="Prontuário Lançado",
-            variable=self.record_launched_var,
+            self.form_frame, text="Record Launched", variable=self.record_launched_var
         ).grid(row=3, column=0, columnspan=2, pady=5)
 
         # Buttons frame
@@ -74,19 +66,19 @@ class SessionFormView(tk.Frame):
 
         # Save button
         self.save_button = tk.Button(
-            self.button_frame, text="Salvar", command=self.save_session
+            self.button_frame, text="Save", command=self.save_session
         )
         self.save_button.pack(side="left", padx=5)
 
         # Delete button
         self.delete_button = tk.Button(
-            self.button_frame, text="Excluir", command=self.delete_session
+            self.button_frame, text="Delete", command=self.delete_session
         )
         self.delete_button.pack(side="left", padx=5)
         self.delete_button.config(state=tk.DISABLED)  # Initially disabled
 
         # Latest sessions label
-        tk.Label(self, text="Últimos Atendimentos", font=("Arial", 14)).pack(
+        tk.Label(self, text="Latest Sessions", font=("Arial", 14)).pack(
             pady=10, anchor="center"
         )
 
@@ -99,14 +91,10 @@ class SessionFormView(tk.Frame):
 
         self.scrollable_frame.bind(
             "<Configure>",
-            lambda e: self.canvas.configure(
-                scrollregion=self.canvas.bbox("all")
-            ),
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")),
         )
 
-        self.canvas.create_window(
-            (0, 0), window=self.scrollable_frame, anchor="nw"
-        )
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
         # Pack the canvas and scrollbar
@@ -134,20 +122,16 @@ class SessionFormView(tk.Frame):
         try:
             session_date = datetime.strptime(session_date_str, "%d-%m-%Y").date()
         except ValueError:
-            messagebox.showerror(
-                "Erro", "Formato de data inválido. Use dd-mm-yyyy."
-            )
+            messagebox.showerror("Error", "Invalid date format. Use dd-mm-yyyy.")
             return
 
         if not patient_name:
-            messagebox.showerror("Erro", "Selecione um paciente.")
+            messagebox.showerror("Error", "Select a patient.")
             return
 
         with session_scope() as session:
             patient = (
-                session.query(Patient)
-                .filter(Patient.name == patient_name)
-                .first()
+                session.query(Patient).filter(Patient.name == patient_name).first()
             )
             if patient:
                 if self.selected_appointment_id:
@@ -162,11 +146,9 @@ class SessionFormView(tk.Frame):
                         appointment_to_update.patient_id = patient.id
                         appointment_to_update.record_done = record_done
                         appointment_to_update.record_launched = record_launched
-                        messagebox.showinfo(
-                            "Sucesso", "Sessão atualizada com sucesso!"
-                        )
+                        messagebox.showinfo("Success", "Session updated successfully!")
                     else:
-                        messagebox.showerror("Erro", "Sessão não encontrada.")
+                        messagebox.showerror("Error", "Session not found.")
                 else:
                     # Creating new session
                     new_appointment = Appointment(
@@ -176,9 +158,9 @@ class SessionFormView(tk.Frame):
                         record_launched=record_launched,
                     )
                     session.add(new_appointment)
-                    messagebox.showinfo("Sucesso", "Sessão salva com sucesso!")
+                    messagebox.showinfo("Success", "Session saved successfully!")
             else:
-                messagebox.showerror("Erro", "Paciente não encontrado.")
+                messagebox.showerror("Error", "Patient not found.")
 
         self.update_sessions_list()
         self.clear_form()
@@ -186,14 +168,11 @@ class SessionFormView(tk.Frame):
     def delete_session(self):
         """Delete the selected session from the database"""
         if not self.selected_appointment_id:
-            messagebox.showerror(
-                "Error", "Selecione um atendimento para excluir."
-            )
+            messagebox.showerror("Error", "Select a session to delete.")
             return
 
         if messagebox.askyesno(
-            "Confirmar Exclusão",
-            "Tem certeza de que deseja excluir este atendimento?",
+            "Confirm Deletion", "Are you sure you want to delete this session?"
         ):
             with session_scope() as session:
                 appointment_to_delete = (
@@ -203,22 +182,18 @@ class SessionFormView(tk.Frame):
                 )
                 if appointment_to_delete:
                     session.delete(appointment_to_delete)
-                    messagebox.showinfo(
-                        "Success", "Atendimento excluído com sucesso!"
-                    )
+                    messagebox.showinfo("Success", "Session deleted successfully!")
                     self.update_sessions_list()
                     self.clear_form()
                 else:
-                    messagebox.showerror("Error", "Atendimento não encontrado.")
+                    messagebox.showerror("Error", "Session not found.")
         self.update_sessions_list()  # update session list after delete
 
     def load_session_for_editing(self, session_id):
         """Load the selected session's data into the form for editing"""
         with session_scope() as session:
             appointment_to_load = (
-                session.query(Appointment)
-                .filter(Appointment.id == session_id)
-                .first()
+                session.query(Appointment).filter(Appointment.id == session_id).first()
             )
 
             if appointment_to_load:
@@ -229,19 +204,13 @@ class SessionFormView(tk.Frame):
                     else ""
                 )
                 self.date_entry.delete(0, tk.END)
-                self.date_entry.insert(
-                    0, appointment_to_load.date.strftime("%d-%m-%Y")
-                )
+                self.date_entry.insert(0, appointment_to_load.date.strftime("%d-%m-%Y"))
                 self.record_done_var.set(appointment_to_load.record_done)
                 self.record_launched_var.set(appointment_to_load.record_launched)
-                self.delete_button.config(
-                    state=tk.NORMAL
-                )  # Enable delete button
-                self.save_button.config(
-                    text="Atualizar"
-                )  # Change button text to "Update"
+                self.delete_button.config(state=tk.NORMAL)  # Enable delete button
+                self.save_button.config(text="Update")  # Change button text to "Update"
             else:
-                messagebox.showerror("Error", "Sessão não encontrada.")
+                messagebox.showerror("Error", "Session not found.")
 
     def update_sessions_list(self):
         """Update the list of latest sessions"""
@@ -259,28 +228,23 @@ class SessionFormView(tk.Frame):
                 patient_name = (
                     appointment.patient.name if appointment.patient else "N/A"
                 )
-                session_info = f"{appointment.date.strftime('%d-%m-%Y')} - {patient_name} - Feito: {appointment.record_done} - Lançado: {appointment.record_launched}"
+                session_info = f"{appointment.date.strftime('%d-%m-%Y')} - {patient_name} - Done: {appointment.record_done} - Launched: {appointment.record_launched}"
 
-                # Cria a label e destaca se necessário
+                # Create the label and highlight if necessary
                 label = tk.Label(
-                    self.scrollable_frame,
-                    text=session_info,
-                    width=50,
-                    anchor="center",
+                    self.scrollable_frame, text=session_info, width=50, anchor="center"
                 )
 
                 if not appointment.record_done:
-                    label.config(
-                        bg="red"
-                    )  # Destaca com fundo vermelho se não foi feito
+                    label.config(bg="red")  # Highlight with red background if not done
                 elif not appointment.record_launched:
                     label.config(
                         bg="orange"
-                    )  # Destaca com fundo laranja se foi feito mas não lançado
+                    )  # Highlight with orange background if done but not launched
                 else:
                     label.config(
                         bg="green"
-                    )  # Destaca com fundo verde se ambos são True
+                    )  # Highlight with green background if both are True
 
                 # Bind the click event to the label, passing the appointment ID
                 label.bind(
@@ -302,4 +266,4 @@ class SessionFormView(tk.Frame):
         self.record_done_var.set(False)
         self.record_launched_var.set(False)
         self.delete_button.config(state=tk.DISABLED)
-        self.save_button.config(text="Salvar")
+        self.save_button.config(text="Save")

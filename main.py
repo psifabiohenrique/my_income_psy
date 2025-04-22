@@ -7,7 +7,7 @@ if __name__ == "__main__":
     root.geometry("800x800")
 
     try:
-        root.iconbitmap("./icon.ico")
+        root.iconbitmap("./assets/icon.ico")
     except:
         ...
 

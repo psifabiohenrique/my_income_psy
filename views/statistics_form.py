@@ -48,7 +48,7 @@ class StatisticsView(tk.Frame):
         first_day_of_month = today.replace(day=1)
 
         # Start date
-        tk.Label(date_frame, text="Data de Início:").grid(
+        tk.Label(date_frame, text="Start Date:").grid(
             row=0, column=0, padx=5
         )
         self.start_date_entry = DateEntry(
@@ -65,7 +65,7 @@ class StatisticsView(tk.Frame):
         self.start_date_entry.grid(row=0, column=1, padx=5)
 
         # End date
-        tk.Label(date_frame, text="Data de Fim:").grid(row=0, column=2, padx=5)
+        tk.Label(date_frame, text="End Date:").grid(row=0, column=2, padx=5)
         self.end_date_entry = DateEntry(
             date_frame,
             width=12,
@@ -81,7 +81,7 @@ class StatisticsView(tk.Frame):
 
         # Analyze button
         analyze_button = tk.Button(
-            self, text="Analisar", command=self.analyze_data
+            self, text="Analyze", command=self.analyze_data
         )
         analyze_button.pack(pady=10)
 
@@ -90,25 +90,25 @@ class StatisticsView(tk.Frame):
         self.results_frame.pack(pady=10)
 
         # Total attendances label
-        tk.Label(self.results_frame, text="Total de Atendimentos:").grid(
+        tk.Label(self.results_frame, text="Total Attendances:").grid(
             row=0, column=0, sticky="w"
         )
         self.total_attendances_label = tk.Label(self.results_frame, text="0")
         self.total_attendances_label.grid(row=0, column=1, sticky="w")
 
         # Attendances by health plan label
-        tk.Label(self.results_frame, text="Atendimentos por Convênio:").grid(
+        tk.Label(self.results_frame, text="Attendances by Health Plan:").grid(
             row=1, column=0, sticky="w"
         )
         self.attendances_by_health_plan_label = tk.Label(
-            self.results_frame, text="Nenhum"
+            self.results_frame, text="None"
         )
         self.attendances_by_health_plan_label.grid(row=1, column=1, sticky="w")
 
         # Total money received label
         tk.Label(
             self.results_frame,
-            text="Total de Dinheiro Recebido:",
+            text="Total Money Received:",
             font=("Arial", 12, "bold"),
         ).grid(row=2, column=0, sticky="w")
         self.total_money_received_label = tk.Label(
@@ -156,7 +156,7 @@ class StatisticsView(tk.Frame):
             ]
         )
         if not attendances_by_health_plan_str:
-            attendances_by_health_plan_str = "Nenhum"
+            attendances_by_health_plan_str = "None"
 
         self.update_results(
             total_attendances,
