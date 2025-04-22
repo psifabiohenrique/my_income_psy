@@ -1,7 +1,17 @@
 import enum
-from sqlalchemy import Column, Integer, String, Date, Float, Boolean, ForeignKey, Enum
-from sqlalchemy.orm import relationship
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+)
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -14,6 +24,20 @@ class WeekDays(enum.Enum):
     FRIDAY = "Sexta-feira"
     SATURDAY = "Sábado"
     SUNDAY = "Domingo"
+
+    @staticmethod
+    def from_string(day_string):
+        day_string = day_string.strip().lower()
+        mapping = {
+            "segunda-feira": WeekDays.MONDAY,
+            "terca-feira": WeekDays.TUESDAY,
+            "quarta-feira": WeekDays.WEDNESDAY,
+            "quinta-feira": WeekDays.THURSDAY,
+            "sexta-feira": WeekDays.FRIDAY,
+            "sabado": WeekDays.SATURDAY,
+            "domingo": WeekDays.SUNDAY,
+        }
+        return mapping.get(day_string, None)
 
 
 class Patient(Base):

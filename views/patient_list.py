@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
+
 from src.models.models import Patient
-from tkinter import ttk
 from src.utils import session_scope
 
 
@@ -41,6 +41,14 @@ class PatientListView(tk.Frame):
         )
         statistics_button.pack(side=tk.LEFT, padx=5)
 
+        # Spreadsheet Integradion button
+        spreadsheet_integration = ttk.Button(
+            button_frame,
+            text="Spreadsheet Integration",
+            command=lambda: self.show_view("spreedsheet_integration"),
+        )
+        spreadsheet_integration.pack(side=tk.LEFT, padx=5)
+
         # Separator
         separator = ttk.Separator(self, orient="horizontal")
         separator.pack(fill="x", padx=5, pady=5)
@@ -59,8 +67,16 @@ class PatientListView(tk.Frame):
                 patient_frame = tk.Frame(self)
                 patient_frame.pack(pady=5)
 
-                patient_info = f"{patient.name} - Dia: {patient.attendance_day} - Plano: {patient.health_plan or 'Nenhum'}"
-                tk.Label(patient_frame, text=patient_info).pack(side=tk.LEFT, padx=5)
+                # Acesse o valor da enumeração para exibir o dia de atendimento
+                attendance_day_value = (
+                    patient.attendance_day.value
+                    if patient.attendance_day
+                    else "Não definido"
+                )
+                patient_info = f"{patient.name} - Dia: {attendance_day_value} - Plano: {patient.health_plan or 'Nenhum'}"
+                tk.Label(patient_frame, text=patient_info).pack(
+                    side=tk.LEFT, padx=5
+                )
 
                 edit_button = tk.Button(
                     patient_frame,
@@ -73,7 +89,9 @@ class PatientListView(tk.Frame):
                 delete_button = tk.Button(
                     patient_frame,
                     text="Delete",
-                    command=lambda id=patient.id: self.delete_patient_wrapper(id),
+                    command=lambda id=patient.id: self.delete_patient_wrapper(
+                        id
+                    ),
                 )
                 delete_button.pack(side=tk.LEFT, padx=5)
                 self.patient_buttons.append(delete_button)
@@ -90,6 +108,8 @@ class PatientListView(tk.Frame):
 
     def delete_patient(self, patient_id):
         with session_scope() as session:
-            patient = session.query(Patient).filter(Patient.id == patient_id).first()
+            patient = (
+                session.query(Patient).filter(Patient.id == patient_id).first()
+            )
             if patient:
                 session.delete(patient)

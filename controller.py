@@ -3,7 +3,8 @@ import tkinter as tk
 from views.patient_form import PatientFormView
 from views.patient_list import PatientListView
 from views.session_form import SessionFormView
-from views.statistics import StatisticsView
+from views.statistics_form import StatisticsView
+from views.spreadsheet_integration_form import SpreadsheetIntegrationForm
 
 
 class AppController(tk.Frame):
@@ -31,6 +32,10 @@ class AppController(tk.Frame):
             self.views["session_form"] = SessionFormView(self, self.show_view)
         elif name == "statistics":
             self.views["statistics"] = StatisticsView(self, self.show_view)
+        elif name == "spreedsheet_integration":
+            self.views["spreedsheet_integration"] = SpreadsheetIntegrationForm(
+                self, self.show_view
+            )
 
         # Grid the desired view
         current_view = self.views[name]

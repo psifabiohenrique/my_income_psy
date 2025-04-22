@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkcalendar import DateEntry
-from datetime import datetime, date
+from datetime import date
 from src.IncomeAnalysis import IncomeAnalysis
 from src.models.models import Patient
 from src.utils import session_scope
@@ -14,7 +14,9 @@ class StatisticsView(tk.Frame):
 
         tk.Label(self, text="Statistics", font=("Arial", 16)).pack(pady=10)
         tk.Button(
-            self, text="Back to List", command=lambda: self.show_view("patient_list")
+            self,
+            text="Back to List",
+            command=lambda: self.show_view("patient_list"),
         ).pack(pady=20)
 
         # Filter frame
@@ -46,7 +48,9 @@ class StatisticsView(tk.Frame):
         first_day_of_month = today.replace(day=1)
 
         # Start date
-        tk.Label(date_frame, text="Data de Início:").grid(row=0, column=0, padx=5)
+        tk.Label(date_frame, text="Data de Início:").grid(
+            row=0, column=0, padx=5
+        )
         self.start_date_entry = DateEntry(
             date_frame,
             width=12,
@@ -76,7 +80,9 @@ class StatisticsView(tk.Frame):
         self.end_date_entry.grid(row=0, column=3, padx=5)
 
         # Analyze button
-        analyze_button = tk.Button(self, text="Analisar", command=self.analyze_data)
+        analyze_button = tk.Button(
+            self, text="Analisar", command=self.analyze_data
+        )
         analyze_button.pack(pady=10)
 
         # Results frame
@@ -144,13 +150,18 @@ class StatisticsView(tk.Frame):
 
         # Format attendances by health plan
         attendances_by_health_plan_str = ", ".join(
-            [f"{plan}: {count}" for plan, count in attendances_by_health_plan.items()]
+            [
+                f"{plan}: {count}"
+                for plan, count in attendances_by_health_plan.items()
+            ]
         )
         if not attendances_by_health_plan_str:
             attendances_by_health_plan_str = "Nenhum"
 
         self.update_results(
-            total_attendances, attendances_by_health_plan_str, total_therapist_income
+            total_attendances,
+            attendances_by_health_plan_str,
+            total_therapist_income,
         )
 
     def update_results(
@@ -158,5 +169,9 @@ class StatisticsView(tk.Frame):
     ):
         """Update the results labels with the analyzed data"""
         self.total_attendances_label.config(text=str(total_attendances))
-        self.attendances_by_health_plan_label.config(text=attendances_by_health_plan)
-        self.total_money_received_label.config(text=f"R$ {total_money_received:.2f}")
+        self.attendances_by_health_plan_label.config(
+            text=attendances_by_health_plan
+        )
+        self.total_money_received_label.config(
+            text=f"R$ {total_money_received:.2f}"
+        )

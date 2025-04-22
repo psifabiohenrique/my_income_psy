@@ -1,3 +1,7 @@
 sqlalchemy
 alembic
 tkcalendar
+pyinstaller
+pandas
+xlsxwriter
+openpyxl
