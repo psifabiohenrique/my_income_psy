@@ -10,15 +10,15 @@ if getattr(sys, 'frozen', False):
     basedir = os.path.dirname(sys.executable)
 else:
     # we are running in a normal Python environment
-    basedir = os.path.abspath(os.path.dirname(__file__))
+    basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
-DATABASE_URL = f"sqlite:///{os.path.join(basedir, 'psicologia.db')}"
+DATABASE_URL = f"sqlite:///{os.path.join(basedir, 'psychology.db')}"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # def criar_banco():
-if not os.path.exists(os.path.join(basedir, 'psicologia.db')):
+if not os.path.exists(os.path.join(basedir, 'psychology.db')):
     Base.metadata.create_all(bind=engine)
 
 def get_session():

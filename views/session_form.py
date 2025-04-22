@@ -88,14 +88,27 @@ class SessionFormView(tk.Frame):
         with session_scope() as session:
             patient = session.query(Patient).filter(Patient.name == patient_name).first()
             if patient:
-                new_session = Appointment(
-                    date=session_date,
-                    patient_id=patient.id,
-                    record_done=record_done,
-                    record_launched=record_launched
-                )
-                session.add(new_session)
-                messagebox.showinfo("Sucesso", "Sessão salva com sucesso!")
+                if self.selected_session_id:
+                    # Editing existing session
+                    session_to_update = session.query(Appointment).filter(Appointment.id == self.selected_session_id).first()
+                    if session_to_update:
+                        session_to_update.date = session_date
+                        session_to_update.patient_id = patient.id
+                        session_to_update.record_done = record_done
+                        session_to_update.record_launched = record_launched
+                        messagebox.showinfo("Sucesso", "Sessão atualizada com sucesso!")
+                    else:
+                        messagebox.showerror("Erro", "Sessão não encontrada.")
+                else:
+                    # Creating new session
+                    new_session = Appointment(
+                        date=session_date,
+                        patient_id=patient.id,
+                        record_done=record_done,
+                        record_launched=record_launched
+                    )
+                    session.add(new_session)
+                    messagebox.showinfo("Sucesso", "Sessão salva com sucesso!")
             else:
                 messagebox.showerror("Erro", "Paciente não encontrado.")
 
