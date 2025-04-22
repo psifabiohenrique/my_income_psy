@@ -4,7 +4,7 @@ from controller import AppController
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("Gestão de Consultório")
-    root.geometry("800x600")
+    root.geometry("800x800")
 
     try:
         root.iconbitmap("./icon.ico")

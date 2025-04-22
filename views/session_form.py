@@ -1,7 +1,9 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
-from tkcalendar import DateEntry
 from datetime import datetime
+from tkinter import messagebox, ttk
+
+from tkcalendar import DateEntry
+
 from src.models.models import Appointment, Patient
 from src.utils import session_scope
 
@@ -87,11 +89,29 @@ class SessionFormView(tk.Frame):
         tk.Label(self, text="Últimos Atendimentos", font=("Arial", 14)).pack(
             pady=10, anchor="center"
         )
-        self.sessions_listbox = tk.Listbox(self, width=50, height=10)
-        self.sessions_listbox.pack(pady=10, anchor="center")
-        self.sessions_listbox.bind(
-            "<Double-Button-1>", self.load_session_for_editing
-        )  # Bind double click event
+
+        # Create a canvas for scrolling
+        self.canvas = tk.Canvas(self)
+        self.scrollbar = tk.Scrollbar(
+            self, orient="vertical", command=self.canvas.yview
+        )
+        self.scrollable_frame = tk.Frame(self.canvas)
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            ),
+        )
+
+        self.canvas.create_window(
+            (0, 0), window=self.scrollable_frame, anchor="nw"
+        )
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # Pack the canvas and scrollbar
+        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.update_sessions_list()
 
@@ -192,40 +212,22 @@ class SessionFormView(tk.Frame):
                     messagebox.showerror("Error", "Atendimento não encontrado.")
         self.update_sessions_list()  # update session list after delete
 
-    def load_session_for_editing(self, event):
+    def load_session_for_editing(self, session_id):
         """Load the selected session's data into the form for editing"""
-        selected_index = self.sessions_listbox.curselection()
-        if not selected_index:
-            return
-
-        selected_session_info = self.sessions_listbox.get(selected_index[0])
-        session_date_str = selected_session_info.split(" - ")[0]
-
         with session_scope() as session:
-            try:
-                session_date = datetime.strptime(
-                    session_date_str, "%d-%m-%Y"
-                ).date()
-            except ValueError:
-                messagebox.showerror(
-                    "Error", "Formato de data inválido na lista."
-                )
-                return
-
             session_to_load = (
                 session.query(Appointment)
-                .filter(Appointment.date == session_date)
+                .filter(Appointment.id == session_id)
                 .first()
             )
 
             if session_to_load:
                 self.selected_session_id = session_to_load.id
-                if session_to_load.patient:
-                    self.patient_combo.set(session_to_load.patient.name)
-                else:
-                    self.patient_combo.set(
-                        ""
-                    )  # Set to empty if no patient associated
+                self.patient_combo.set(
+                    session_to_load.patient.name
+                    if session_to_load.patient
+                    else ""
+                )
                 self.date_entry.delete(0, tk.END)
                 self.date_entry.insert(
                     0, session_to_load.date.strftime("%d-%m-%Y")
@@ -235,13 +237,16 @@ class SessionFormView(tk.Frame):
                 self.delete_button.config(
                     state=tk.NORMAL
                 )  # Enable delete button
-                self.save_button.config(text="Atualizar")
+                self.save_button.config(
+                    text="Atualizar"
+                )  # Change button text to "Update"
             else:
-                messagebox.showerror("Error", "Atendimento não encontrado.")
+                messagebox.showerror("Error", "Sessão não encontrada.")
 
     def update_sessions_list(self):
         """Update the list of latest sessions"""
-        self.sessions_listbox.delete(0, tk.END)  # Clear existing list
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()  # Clear existing sessions
 
         with session_scope() as session:
             sessions = (
@@ -253,7 +258,22 @@ class SessionFormView(tk.Frame):
             for session in sessions:
                 patient_name = session.patient.name if session.patient else "N/A"
                 session_info = f"{session.date.strftime('%d-%m-%Y')} - {patient_name} - Feito: {session.record_done} - Lançado: {session.record_launched}"
-                self.sessions_listbox.insert(tk.END, session_info)
+
+                # Cria a label e destaca se necessário
+                label = tk.Label(self.scrollable_frame, text=session_info)
+                if not session.record_done and not session.record_launched:
+                    label.config(bg="yellow")  # Destaca com fundo amarelo
+
+                # Bind the click event to the label, passing the session ID
+                label.bind(
+                    "<Button-1>",
+                    lambda e,
+                    session_id=session.id: self.load_session_for_editing(
+                        session_id
+                    ),
+                )
+
+                label.pack(pady=5)
 
     def clear_form(self):
         """Clear the form fields and reset to default state"""

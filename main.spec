@@ -6,7 +6,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('psicologia.db', '.'),
+        ('psychology.db', '.'),
         ('controller.py', '.'),
         ('src/', '.'),
         ('views/', '.')
