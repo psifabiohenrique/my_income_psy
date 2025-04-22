@@ -262,7 +262,12 @@ class SessionFormView(tk.Frame):
                 session_info = f"{appointment.date.strftime('%d-%m-%Y')} - {patient_name} - Feito: {appointment.record_done} - Lançado: {appointment.record_launched}"
 
                 # Cria a label e destaca se necessário
-                label = tk.Label(self.scrollable_frame, text=session_info)
+                label = tk.Label(
+                    self.scrollable_frame,
+                    text=session_info,
+                    width=50,
+                    anchor="center",
+                )
 
                 if not appointment.record_done:
                     label.config(
