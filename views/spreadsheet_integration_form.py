@@ -4,7 +4,7 @@ from tkinter import filedialog, ttk
 from src.spreadsheet_integration import SpreadsheetIntegration
 
 
-class SpreadsheetIntegrationForm(ttk.Frame):
+class SpreadsheetIntegrationForm(tk.Frame):
     def __init__(self, master, show_view_callback):
         super().__init__(master)
         self.show_view = show_view_callback

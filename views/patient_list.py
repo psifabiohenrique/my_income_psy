@@ -48,7 +48,7 @@ class PatientListView(tk.Frame):
         spreadsheet_integration = ttk.Button(
             button_frame,
             text="Spreadsheet Integration",
-            command=lambda: self.show_view("spreadsheet_integration"),
+            command=lambda: self.show_view("spreedsheet_integration"),
         )
         spreadsheet_integration.pack(side=tk.LEFT, padx=5)
 
