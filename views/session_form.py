@@ -16,6 +16,7 @@ class SessionFormView(ttk.Frame):
 
         # Title label
         title_label = ttk.Label(self, text="Session Form", font=("Arial", 16))
+        # Center align all widgets
         title_label.pack(pady=10, anchor="center")
 
         # Back button
@@ -26,7 +27,7 @@ class SessionFormView(ttk.Frame):
 
         # Form fields frame
         self.form_frame = ttk.Frame(self)
-        self.form_frame.pack(pady=10, padx=20, fill="x")
+        self.form_frame.pack(pady=10, padx=20, anchor="center")
 
         # Patient selection
         ttk.Label(self.form_frame, text="Patient:").grid(row=0, column=0, sticky="w")
@@ -81,6 +82,69 @@ class SessionFormView(ttk.Frame):
             pady=10, anchor="center"
         )
 
+        # Filters frame
+        self.filters_frame = ttk.Frame(self)
+        self.filters_frame.pack(pady=10, padx=20, fill="x", anchor="center")
+
+        # Record done filter
+        self.filter_record_done_var = tk.BooleanVar()
+        ttk.Checkbutton(
+            self.filters_frame, text="Record Done", variable=self.filter_record_done_var
+        ).grid(row=0, column=0, padx=5, sticky="w")
+
+        # Record launched filter
+        self.filter_record_launched_var = tk.BooleanVar()
+        ttk.Checkbutton(
+            self.filters_frame,
+            text="Record Launched",
+            variable=self.filter_record_launched_var,
+        ).grid(row=0, column=1, padx=5, sticky="w")
+
+        # Apply filters button
+        apply_filters_button = ttk.Button(
+            self.filters_frame, text="Apply Filters", command=self.apply_filters
+        )
+        apply_filters_button.grid(row=0, column=4, padx=5, sticky="w")
+
+        # Clear filters button
+        clear_filters_button = ttk.Button(
+            self.filters_frame, text="Clear Filters", command=self.clear_filters
+        )
+        clear_filters_button.grid(row=0, column=5, padx=5, sticky="w")
+
+        # Date range filters
+        ttk.Label(self.filters_frame, text="Start Date:").grid(
+            row=1, column=0, sticky="w"
+        )
+        self.filter_start_date_entry = DateEntry(
+            self.filters_frame,
+            width=12,
+            background="darkblue",
+            foreground="white",
+            borderwidth=2,
+            date_pattern="dd-mm-yyyy",
+        )
+        self.filter_start_date_entry.set_date(
+            datetime(datetime.now().year, datetime.now().month, 1)
+        )
+        self.filter_start_date_entry.grid(row=1, column=1, padx=5, sticky="w")
+
+        ttk.Label(self.filters_frame, text="End Date:").grid(
+            row=1, column=2, sticky="w"
+        )
+        self.filter_end_date_entry = DateEntry(
+            self.filters_frame,
+            width=12,
+            background="darkblue",
+            foreground="white",
+            borderwidth=2,
+            date_pattern="dd-mm-yyyy",
+        )
+        self.filter_end_date_entry.set_date(datetime.now())
+        self.filter_end_date_entry.grid(row=1, column=3, padx=5, sticky="w")
+
+        self.filter_applied = False
+
         # Create a canvas for scrolling
         self.canvas = tk.Canvas(self)
         self.scrollbar = ttk.Scrollbar(
@@ -97,8 +161,10 @@ class SessionFormView(ttk.Frame):
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
         # Pack the canvas and scrollbar
-        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, anchor="center")
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y, anchor="center")
+
+        self.clear_filters()
 
         self.update_sessions_list()
 
@@ -243,12 +309,30 @@ class SessionFormView(ttk.Frame):
             widget.destroy()
 
         with session_scope() as session:
-            appointments = (
-                session.query(Appointment)
-                .order_by(Appointment.date.desc())
-                .limit(10)
-                .all()
-            )
+            query = session.query(Appointment)
+
+            if self.filter_applied:
+                if self.filter_record_done_var.get():
+                    query = query.filter(Appointment.record_done)
+                if self.filter_record_launched_var.get():
+                    query = query.filter(Appointment.record_launched)
+
+                start_date = self.filter_start_date_entry.get()
+                end_date = self.filter_end_date_entry.get()
+                if start_date and end_date:
+                    try:
+                        start_date = datetime.strptime(start_date, "%d-%m-%Y").date()
+                        end_date = datetime.strptime(end_date, "%d-%m-%Y").date()
+                        query = query.filter(
+                            Appointment.date.between(start_date, end_date)
+                        )
+                    except ValueError:
+                        messagebox.showerror(
+                            "Error", "Invalid date format. Use dd-mm-yyyy."
+                        )
+                        return
+
+            appointments = query.order_by(Appointment.date.desc()).limit(15).all()
 
             style = ttk.Style()
             style.configure("Red.TLabel", background="red")
@@ -271,7 +355,7 @@ class SessionFormView(ttk.Frame):
                     style_name = "Green.TLabel"
 
                 label = ttk.Label(
-                    self.scrollable_frame, text=session_info, width=50, style=style_name
+                    self.scrollable_frame, text=session_info, style=style_name, anchor="center"
                 )
 
                 label.bind(
@@ -282,7 +366,7 @@ class SessionFormView(ttk.Frame):
                     ),
                 )
 
-                label.pack(pady=5)
+                label.pack(pady=5, padx=150, anchor="center")
 
     def clear_form(self):
         """Clear the form fields and reset to default state"""
@@ -294,3 +378,12 @@ class SessionFormView(ttk.Frame):
         self.record_launched_var.set(False)
         self.delete_button.config(state=tk.DISABLED)
         self.save_button.config(text="Save")
+
+    def clear_filters(self):
+        """Clear all filters and reset the session list to show the latest appointments."""
+        self.filter_applied = False
+        self.update_sessions_list()
+
+    def apply_filters(self):
+        self.filter_applied = True
+        self.update_sessions_list()
