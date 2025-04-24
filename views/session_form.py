@@ -8,34 +8,33 @@ from src.models.models import Appointment, Patient
 from src.utils import session_scope
 
 
-class SessionFormView(tk.Frame):
+class SessionFormView(ttk.Frame):
     def __init__(self, master, show_view_callback):
         super().__init__(master)
         self.show_view = show_view_callback
-        self.selected_appointment_id = (
-            None  # To store the ID of the selected appointment
-        )
+        self.selected_appointment_id = None
 
-        tk.Label(self, text="Session Form", font=("Arial", 16)).pack(
-            pady=10, anchor="center"
-        )
-        tk.Button(
+        # Title label
+        title_label = ttk.Label(self, text="Session Form", font=("Arial", 16))
+        title_label.pack(pady=10, anchor="center")
+
+        # Back button
+        back_button = ttk.Button(
             self, text="Back to List", command=lambda: self.show_view("patient_list")
-        ).pack(pady=20, anchor="center")
+        )
+        back_button.pack(pady=20, anchor="center")
 
         # Form fields frame
-        self.form_frame = tk.Frame(self)
+        self.form_frame = ttk.Frame(self)
         self.form_frame.pack(pady=10, padx=20, fill="x")
 
         # Patient selection
-        tk.Label(self.form_frame, text="Patient:").grid(row=0, column=0, sticky="w")
-        self.patient_combo = ttk.Combobox(
-            self.form_frame, values=self.get_patient_names()
-        )
+        ttk.Label(self.form_frame, text="Patient:").grid(row=0, column=0, sticky="w")
+        self.setup_patient_combobox()
         self.patient_combo.grid(row=0, column=1, sticky="ew", pady=5)
 
         # Session date
-        tk.Label(self.form_frame, text="Session Date:").grid(
+        ttk.Label(self.form_frame, text="Session Date:").grid(
             row=1, column=0, sticky="w"
         )
         self.date_entry = DateEntry(
@@ -50,44 +49,44 @@ class SessionFormView(tk.Frame):
 
         # Record done checkbox
         self.record_done_var = tk.BooleanVar()
-        tk.Checkbutton(
+        ttk.Checkbutton(
             self.form_frame, text="Record Done", variable=self.record_done_var
         ).grid(row=2, column=0, columnspan=2, pady=5)
 
         # Record launched checkbox
         self.record_launched_var = tk.BooleanVar()
-        tk.Checkbutton(
+        ttk.Checkbutton(
             self.form_frame, text="Record Launched", variable=self.record_launched_var
         ).grid(row=3, column=0, columnspan=2, pady=5)
 
         # Buttons frame
-        self.button_frame = tk.Frame(self)
+        self.button_frame = ttk.Frame(self)
         self.button_frame.pack(pady=10, anchor="center")
 
         # Save button
-        self.save_button = tk.Button(
+        self.save_button = ttk.Button(
             self.button_frame, text="Save", command=self.save_session
         )
         self.save_button.pack(side="left", padx=5)
 
         # Delete button
-        self.delete_button = tk.Button(
+        self.delete_button = ttk.Button(
             self.button_frame, text="Delete", command=self.delete_session
         )
         self.delete_button.pack(side="left", padx=5)
-        self.delete_button.config(state=tk.DISABLED)  # Initially disabled
+        self.delete_button.state(["disabled"])  # Initially disabled
 
         # Latest sessions label
-        tk.Label(self, text="Latest Sessions", font=("Arial", 14)).pack(
+        ttk.Label(self, text="Latest Sessions", font=("Arial", 14)).pack(
             pady=10, anchor="center"
         )
 
         # Create a canvas for scrolling
         self.canvas = tk.Canvas(self)
-        self.scrollbar = tk.Scrollbar(
+        self.scrollbar = ttk.Scrollbar(
             self, orient="vertical", command=self.canvas.yview
         )
-        self.scrollable_frame = tk.Frame(self.canvas)
+        self.scrollable_frame = ttk.Frame(self.canvas)
 
         self.scrollable_frame.bind(
             "<Configure>",
@@ -104,10 +103,36 @@ class SessionFormView(tk.Frame):
         self.update_sessions_list()
 
     def get_patient_names(self):
-        """Fetch patient names from the database"""
+        """Fetch patient names from the database ordered alphabetically"""
         with session_scope() as session:
-            patients = session.query(Patient).all()
+            patients = session.query(Patient).order_by(Patient.name).all()
             return [patient.name for patient in patients]
+
+    def setup_patient_combobox(self):
+        """Configure patient combobox with autocomplete feature"""
+        self.patient_combo = ttk.Combobox(
+            self.form_frame, values=self.get_patient_names()
+        )
+        self.patient_combo.grid(row=0, column=1, sticky="ew", pady=5)
+
+        def on_type(event):
+            """Filter combobox values based on user input"""
+            value = event.widget.get().lower()
+            all_patients = self.get_patient_names()
+
+            if value:
+                filtered_patients = [
+                    patient for patient in all_patients if value in patient.lower()
+                ]
+                self.patient_combo["values"] = filtered_patients
+            else:
+                self.patient_combo["values"] = all_patients
+
+            # Show dropdown list
+            self.patient_combo.event_generate("<Down>")
+
+        # Bind to both KeyRelease and KeyPress to ensure dropdown stays open
+        self.patient_combo.bind("<KeyRelease>", on_type)
 
     def save_session(self):
         """Save the session data to the database"""
@@ -215,7 +240,7 @@ class SessionFormView(tk.Frame):
     def update_sessions_list(self):
         """Update the list of latest sessions"""
         for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()  # Clear existing sessions
+            widget.destroy()
 
         with session_scope() as session:
             appointments = (
@@ -223,30 +248,32 @@ class SessionFormView(tk.Frame):
                 .order_by(Appointment.date.desc())
                 .limit(10)
                 .all()
-            )  # Get latest 10 sessions
+            )
+
+            style = ttk.Style()
+            style.configure("Red.TLabel", background="red")
+            style.configure("Orange.TLabel", background="orange")
+            style.configure("Green.TLabel", background="green")
+
             for appointment in appointments:
                 patient_name = (
                     appointment.patient.name if appointment.patient else "N/A"
                 )
                 session_info = f"{appointment.date.strftime('%d-%m-%Y')} - {patient_name} - Done: {appointment.record_done} - Launched: {appointment.record_launched}"
 
-                # Create the label and highlight if necessary
-                label = tk.Label(
-                    self.scrollable_frame, text=session_info, width=50, anchor="center"
+                # Create the label with appropriate style
+                style_name = "TLabel"
+                if not appointment.record_done:
+                    style_name = "Red.TLabel"
+                elif not appointment.record_launched:
+                    style_name = "Orange.TLabel"
+                else:
+                    style_name = "Green.TLabel"
+
+                label = ttk.Label(
+                    self.scrollable_frame, text=session_info, width=50, style=style_name
                 )
 
-                if not appointment.record_done:
-                    label.config(bg="red")  # Highlight with red background if not done
-                elif not appointment.record_launched:
-                    label.config(
-                        bg="orange"
-                    )  # Highlight with orange background if done but not launched
-                else:
-                    label.config(
-                        bg="green"
-                    )  # Highlight with green background if both are True
-
-                # Bind the click event to the label, passing the appointment ID
                 label.bind(
                     "<Button-1>",
                     lambda e,
